@@ -9,9 +9,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
 
-    <!-- ===== 新增：通过 JS 变量读取玩家数量 ===== -->
-    <script src="status.js"></script>
-
     <style>
         /* ========== 全局基础设置 ========== */
         html { scroll-behavior: smooth; }
@@ -356,25 +353,27 @@
         // 初始化卡片倾斜
         initCardTilt('status-card', 15);
 
-        // ===== 修改：通过 status.js 变量读取玩家数量 =====
-        function updateStatus() {
-            if (typeof playerCount !== 'undefined' && playerCount !== null) {
-                var countText = '在线玩家 <span style="color: #0ff; font-weight:700; font-size: 3rem; text-shadow: 0 0 15px #0ff;">' + playerCount + '</span>';
+        // ===== 通过 Cloudflare Pages 函数获取玩家数量 =====
+        async function updateStatus() {
+            try {
+                const response = await fetch('/api/status?t=' + new Date().getTime());
+                const data = await response.json();
+                
+                let countText = '';
+                if (data.count === "离线" || data.error) {
+                    countText = `<span style="color: #ff3366; text-shadow: 0 0 10px #ff3366;">ERR: 服务器维护中</span>`;
+                } else {
+                    countText = `在线玩家 <span style="color: #0ff; font-weight:700; font-size: 3rem; text-shadow: 0 0 15px #0ff;">${data.count}</span>`;
+                }
+                
                 document.getElementById('player-count').innerHTML = countText;
-            } else {
-                document.getElementById('player-count').innerHTML = '<span style="color: #fcc419; text-shadow: 0 0 10px #fcc419;">[数据加载中]</span>';
+            } catch (e) {
+                document.getElementById('player-count').innerHTML = `<span style="color: #fcc419; text-shadow: 0 0 10px #fcc419;">[数据丢失]</span>`;
             }
         }
 
-        // 每60秒重新加载 status.js 并更新显示
-        setInterval(function() {
-            var script = document.createElement('script');
-            script.src = 'status.js?t=' + new Date().getTime();
-            document.head.appendChild(script);
-            // 等待脚本加载完成后更新显示
-            setTimeout(updateStatus, 200);
-        }, 60000);
-
+        // 每60秒更新一次
+        setInterval(updateStatus, 60000);
         // 初次加载显示
         updateStatus();
     </script>
