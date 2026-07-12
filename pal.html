@@ -4,15 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Palworld Server Status</title>
-    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
-
+    <!-- 通过 status.js 读取玩家数量 -->
+    <script src="status.js"></script>
     <style>
         /* ========== 全局基础设置 ========== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         html { scroll-behavior: smooth; }
-        
         body {
             margin: 0;
             padding: 0;
@@ -32,7 +32,6 @@
             background-image: url('images/background.jpg');
             background-size: cover;
             background-position: center;
-            background-attachment: scroll; 
             z-index: -1; 
             will-change: transform; 
             filter: blur(2px) brightness(0.4) contrast(1.2);
@@ -47,41 +46,49 @@
             position: relative; 
         }
 
-        /* ========== 特效: 赛博朋克文字加载动画 ========== */
+        /* ========== 动画 ========== */
         @keyframes textGlitchIn {
             0% { opacity: 0; transform: translateY(20px) skewX(10deg); filter: hue-rotate(90deg); }
             50% { opacity: 0.8; transform: translateY(-5px) skewX(-5deg); filter: hue-rotate(-90deg); }
             100% { opacity: 1; transform: translateY(0) skewX(0); filter: hue-rotate(0); }
         }
+        @keyframes gradientShift {
+            to { background-position: 200% center; }
+        }
+        @keyframes fadeIn { to { opacity: 1; } }
+        @keyframes bounceArrow {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); opacity: 0.6; }
+            40% { transform: translateY(-15px); opacity: 1; text-shadow: 0 0 20px #0ff, 0 0 30px #fff; }
+            60% { transform: translateY(-7px); }
+        }
+        @keyframes glitchAction {
+            0% { transform: translate(0) }
+            20% { transform: translate(-2px, 2px); text-shadow: -2px 0 0 #0ff, 2px 0 0 #f0f; }
+            40% { transform: translate(-2px, -2px); filter: hue-rotate(45deg); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); filter: hue-rotate(-45deg); }
+            100% { transform: translate(0) }
+        }
+        @keyframes pulseNeon {
+            0%, 100% { text-shadow: 0 0 5px #0ff, 0 0 10px #0ff; }
+            50% { text-shadow: 0 0 15px #0ff, 0 0 25px #0ff, 0 0 35px #fff; }
+        }
 
-        /* ========== 第一页特效 ========== */
-
-        /* 赛博朋克大标题：流光 + 色差投影 (青/紫) */
+        /* ========== 标题 ========== */
         h1.cyber-title {
             font-weight: 700;
             font-size: clamp(3rem, 6vw, 4.5rem); 
             margin-bottom: 0.5rem;
             letter-spacing: 2px;
-            
             background: linear-gradient(90deg, #0ff, #fff, #f0f, #fff, #0ff);
             background-size: 200% auto;
             color: transparent;
             -webkit-background-clip: text;
             background-clip: text;
-            
-            text-shadow: 
-                2px 2px 0px rgba(0, 255, 255, 0.5), 
-                -2px -2px 0px rgba(255, 0, 255, 0.5),
-                0 0 20px rgba(0, 255, 255, 0.3);
-            
+            text-shadow: 2px 2px 0px rgba(0, 255, 255, 0.5), -2px -2px 0px rgba(255, 0, 255, 0.5), 0 0 20px rgba(0, 255, 255, 0.3);
             animation: gradientShift 4s linear infinite, textGlitchIn 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
 
-        @keyframes gradientShift {
-            to { background-position: 200% center; }
-        }
-
-        /* 副标题：青色霓虹发光 */
         .subtitle {
             font-size: 1.6rem;
             color: #b0c4de;
@@ -93,9 +100,7 @@
             animation: fadeIn 1s ease-out 0.5s forwards; 
         }
 
-        @keyframes fadeIn { to { opacity: 1; } }
-
-        /* 玩家数量卡片 */
+        /* ========== 玩家数量卡片 ========== */
         .status-card {
             background: rgba(16, 20, 28, 0.6);
             backdrop-filter: blur(12px);
@@ -107,13 +112,12 @@
             transition: all 0.3s ease;
             animation: textGlitchIn 1s ease-out 0.8s backwards;
         }
-
         .status-card:hover {
             border-color: rgba(0, 255, 255, 0.8);
             box-shadow: 0 0 30px rgba(0, 255, 255, 0.3), inset 0 0 20px rgba(0, 255, 255, 0.1);
         }
 
-        /* 向下箭头 */
+        /* ========== 箭头 ========== */
         .scroll-arrow {
             position: absolute;
             bottom: 40px;
@@ -124,14 +128,7 @@
             animation: bounceArrow 2s infinite, fadeIn 1s ease-out 1s backwards;
         }
 
-        @keyframes bounceArrow {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); opacity: 0.6; }
-            40% { transform: translateY(-15px); opacity: 1; text-shadow: 0 0 20px #0ff, 0 0 30px #fff; }
-            60% { transform: translateY(-7px); }
-        }
-
-        /* ========== 第二页特效 ========== */
-        
+        /* ========== 第二页 ========== */
         .content-wrapper {
             display: flex;
             align-items: center;
@@ -140,7 +137,6 @@
             max-width: 1200px;
         }
 
-        /* 特效：第二页标题悬停故障抖动 (Glitch Hover) */
         h2.cyber-h2 {
             font-size: 2.8rem; 
             margin-bottom: 2.5rem; 
@@ -151,16 +147,6 @@
             text-shadow: 2px 0 0 #0ff, -2px 0 0 #f0f;
             transition: all 0.1s;
         }
-
-        @keyframes glitchAction {
-            0% { transform: translate(0) }
-            20% { transform: translate(-2px, 2px); text-shadow: -2px 0 0 #0ff, 2px 0 0 #f0f; }
-            40% { transform: translate(-2px, -2px); filter: hue-rotate(45deg); }
-            60% { transform: translate(2px, 2px); }
-            80% { transform: translate(2px, -2px); filter: hue-rotate(-45deg); }
-            100% { transform: translate(0) }
-        }
-
         h2.cyber-h2:hover {
             animation: glitchAction 0.3s infinite linear;
             cursor: default;
@@ -172,14 +158,13 @@
             gap: 40px;
         }
 
-        /* ========== 3D 翻转卡片 (赛博风调整) ========== */
+        /* ========== 3D 翻转卡片 ========== */
         .flip-card {
             width: 300px;
             height: 140px;
             perspective: 800px; 
             cursor: pointer;
         }
-
         .flip-card-inner {
             position: relative;
             width: 100%;
@@ -188,11 +173,9 @@
             transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
             transform-style: preserve-3d;
         }
-
         .flip-card:hover .flip-card-inner {
             transform: rotateY(180deg) rotateX(5deg); 
         }
-
         .flip-card-front, .flip-card-back {
             position: absolute;
             width: 100%;
@@ -206,7 +189,6 @@
             font-size: 1.5rem;
             letter-spacing: 2px;
         }
-
         .flip-card-front {
             background: rgba(20, 25, 35, 0.7);
             backdrop-filter: blur(8px);
@@ -215,19 +197,11 @@
             box-shadow: 0 10px 20px rgba(0,0,0,0.5);
             color: #eaeaea;
         }
-
-        /* 翻转后：终端风格发光字 */
-        @keyframes pulseNeon {
-            0%, 100% { text-shadow: 0 0 5px #0ff, 0 0 10px #0ff; }
-            50% { text-shadow: 0 0 15px #0ff, 0 0 25px #0ff, 0 0 35px #fff; }
-        }
-
         .flip-card-back {
             background: #0a0e17; 
             transform: rotateY(180deg);
             border: 1px solid #0ff;
             box-shadow: 0 0 15px rgba(0, 255, 255, 0.2) inset;
-            
             color: #0ff;
             font-family: 'Courier New', Courier, monospace;
             font-size: 1.2rem;
@@ -236,14 +210,13 @@
             animation: pulseNeon 2s infinite;
         }
 
-        /* ========== 右侧图片画廊 ========== */
+        /* ========== 图片画廊 ========== */
         .image-gallery {
             display: flex;
             flex-direction: column;
             gap: 60px;
             width: 260px;
         }
-
         .side-img {
             width: 100%;
             height: 150px;
@@ -254,7 +227,6 @@
             border: 1px solid rgba(0, 255, 255, 0.2);
             box-shadow: 0 10px 20px rgba(0,0,0,0.5);
         }
-
         .side-img:hover {
             transform: scale(3); 
             z-index: 10;
@@ -262,7 +234,7 @@
             box-shadow: 0 0 30px rgba(0, 255, 255, 0.4);
         }
 
-        /* ========== 响应式适配 (手机端) ========== */
+        /* ========== 响应式 ========== */
         @media (max-width: 768px) {
             .content-wrapper { flex-direction: column; gap: 50px; text-align: center; }
             .image-gallery { width: 90%; flex-direction: row; gap: 15px; }
@@ -272,25 +244,23 @@
     </style>
 </head>
 <body>
-
     <div class="parallax-bg" id="parallax-bg"></div>
 
+    <!-- ===== 第一页 ===== -->
     <div class="page" id="home">
         <h1 class="cyber-title">Palworld 联机服务器</h1>
         <div class="subtitle">SYSTEM ONLINE // 状态监测</div>
-        
         <div class="status-card" id="status-card">
             <div id="player-count" style="font-size: 2.5rem; font-weight: 600; letter-spacing: 2px;">载入中...</div>
         </div>
-
         <a href="#server-info" class="scroll-arrow">↓</a>
     </div>
 
+    <!-- ===== 第二页 ===== -->
     <div class="page" id="server-info">
         <div class="content-wrapper">
             <div class="text-side">
                 <h2 class="cyber-h2">服务器连接地址</h2>
-                
                 <div class="card-container">
                     <div class="flip-card">
                         <div class="flip-card-inner">
@@ -298,7 +268,6 @@
                             <div class="flip-card-back">frp-act.com:38406</div>
                         </div>
                     </div>
-                    
                     <div class="flip-card">
                         <div class="flip-card-inner">
                             <div class="flip-card-front">济南联通 [NODE_02]</div>
@@ -307,7 +276,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="image-gallery">
                 <img src="images/1.jpg" class="side-img" alt="Palworld Gameplay 1">
                 <img src="images/2.jpg" class="side-img" alt="Palworld Gameplay 2">
@@ -316,65 +284,51 @@
     </div>
 
     <script>
-        // 鼠标滑动卡片倾斜 (Tilt)
+        // 卡片倾斜
         function initCardTilt(cardId, intensity = 10) {
             const card = document.getElementById(cardId);
             if (!card) return;
-
             card.addEventListener('mousemove', (e) => {
                 const rect = card.getBoundingClientRect();
-                const x = e.clientX - rect.left; 
-                const y = e.clientY - rect.top;  
-                
-                const centerX = rect.width / 2;
-                const centerY = rect.height / 2;
-                
-                const rotateX = ((y - centerY) / centerY) * intensity; 
-                const rotateY = ((x - centerX) / centerX) * -intensity; 
-
+                const x = e.clientX - rect.left, y = e.clientY - rect.top;
+                const cx = rect.width / 2, cy = rect.height / 2;
+                const rotateX = ((y - cy) / cy) * intensity;
+                const rotateY = ((x - cx) / cx) * -intensity;
                 card.style.transform = `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-5px)`;
             });
-
             card.addEventListener('mouseleave', () => {
                 card.style.transform = 'perspective(800px) rotateX(0deg) rotateY(0deg) translateY(0px)';
             });
         }
 
-        // 背景视差 (Background Parallax)
+        // 背景视差
         const bg = document.getElementById('parallax-bg');
         document.addEventListener('mousemove', (e) => {
-            const xOffset = (e.clientX / window.innerWidth) - 0.5; 
-            const yOffset = (e.clientY / window.innerHeight) - 0.5;
-            const moveX = xOffset * 5; 
-            const moveY = yOffset * 5;
-            bg.style.transform = `translate3d(${moveX}%, ${moveY}%, 0)`;
+            const x = (e.clientX / window.innerWidth - 0.5) * 5;
+            const y = (e.clientY / window.innerHeight - 0.5) * 5;
+            bg.style.transform = `translate3d(${x}%, ${y}%, 0)`;
         });
 
-        // 初始化卡片倾斜
         initCardTilt('status-card', 15);
 
-        // ===== 通过 Cloudflare Pages 函数获取玩家数量 =====
-        async function updateStatus() {
-            try {
-                const response = await fetch('/api/status?t=' + new Date().getTime());
-                const data = await response.json();
-                
-                let countText = '';
-                if (data.count === "离线" || data.error) {
-                    countText = `<span style="color: #ff3366; text-shadow: 0 0 10px #ff3366;">ERR: 服务器维护中</span>`;
-                } else {
-                    countText = `在线玩家 <span style="color: #0ff; font-weight:700; font-size: 3rem; text-shadow: 0 0 15px #0ff;">${data.count}</span>`;
-                }
-                
-                document.getElementById('player-count').innerHTML = countText;
-            } catch (e) {
-                document.getElementById('player-count').innerHTML = `<span style="color: #fcc419; text-shadow: 0 0 10px #fcc419;">[数据丢失]</span>`;
+        // ===== 从 status.js 读取玩家数量 =====
+        function updateStatus() {
+            const el = document.getElementById('player-count');
+            if (typeof playerCount !== 'undefined' && playerCount !== null) {
+                el.innerHTML = `在线玩家 <span style="color: #0ff; font-weight:700; font-size: 3rem; text-shadow: 0 0 15px #0ff;">${playerCount}</span>`;
+            } else {
+                el.innerHTML = '<span style="color: #fcc419; text-shadow: 0 0 10px #fcc419;">[数据加载中]</span>';
             }
         }
 
-        // 每60秒更新一次
-        setInterval(updateStatus, 60000);
-        // 初次加载显示
+        // 每60秒重新加载 status.js
+        setInterval(function() {
+            const script = document.createElement('script');
+            script.src = 'status.js?t=' + new Date().getTime();
+            document.head.appendChild(script);
+            setTimeout(updateStatus, 200);
+        }, 60000);
+
         updateStatus();
     </script>
 </body>
