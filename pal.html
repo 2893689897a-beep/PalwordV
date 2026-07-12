@@ -7,8 +7,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
-    <!-- 通过 status.js 读取玩家数量 -->
-    <script src="status.js"></script>
     <style>
         /* ========== 全局基础设置 ========== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -98,23 +96,6 @@
             text-shadow: 0 0 8px rgba(0, 255, 255, 0.6);
             opacity: 0; 
             animation: fadeIn 1s ease-out 0.5s forwards; 
-        }
-
-        /* ========== 玩家数量卡片 ========== */
-        .status-card {
-            background: rgba(16, 20, 28, 0.6);
-            backdrop-filter: blur(12px);
-            padding: 2rem 4rem;
-            border-radius: 12px;
-            text-align: center;
-            border: 1px solid rgba(0, 255, 255, 0.3);
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.1), inset 0 0 15px rgba(0, 255, 255, 0.05);
-            transition: all 0.3s ease;
-            animation: textGlitchIn 1s ease-out 0.8s backwards;
-        }
-        .status-card:hover {
-            border-color: rgba(0, 255, 255, 0.8);
-            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3), inset 0 0 20px rgba(0, 255, 255, 0.1);
         }
 
         /* ========== 箭头 ========== */
@@ -250,9 +231,6 @@
     <div class="page" id="home">
         <h1 class="cyber-title">Palworld 联机服务器</h1>
         <div class="subtitle">SYSTEM ONLINE // 状态监测</div>
-        <div class="status-card" id="status-card">
-            <div id="player-count" style="font-size: 2.5rem; font-weight: 600; letter-spacing: 2px;">载入中...</div>
-        </div>
         <a href="#server-info" class="scroll-arrow">↓</a>
     </div>
 
@@ -310,26 +288,6 @@
         });
 
         initCardTilt('status-card', 15);
-
-        // ===== 从 status.js 读取玩家数量 =====
-        function updateStatus() {
-            const el = document.getElementById('player-count');
-            if (typeof playerCount !== 'undefined' && playerCount !== null) {
-                el.innerHTML = `在线玩家 <span style="color: #0ff; font-weight:700; font-size: 3rem; text-shadow: 0 0 15px #0ff;">${playerCount}</span>`;
-            } else {
-                el.innerHTML = '<span style="color: #fcc419; text-shadow: 0 0 10px #fcc419;">[数据加载中]</span>';
-            }
-        }
-
-        // 每60秒重新加载 status.js
-        setInterval(function() {
-            const script = document.createElement('script');
-            script.src = 'status.js?t=' + new Date().getTime();
-            document.head.appendChild(script);
-            setTimeout(updateStatus, 200);
-        }, 60000);
-
-        updateStatus();
     </script>
 </body>
 </html>
